@@ -1,0 +1,29 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'webapp/catalog.css' %}">
+<script src="{% static 'webapp/jquery-3.3.1.min.js' %}"></script>
+<script>
+$(document).ready(function (){
+    var hs=$("div");
+    var con=0;
+    for (var i=1;i<hs.length;i++){//遍历网页，找文章标题
+       //if(hs[i].localName.charAt(0)=="h"){
+       //    hs[i].setAttribute("id","t"+con);//给标签添加id
+       //    var num= 2; //parseInt(hs[i].localName.charAt(1))-2;
+       //    while (num--){//添加空格
+       //        $("#cataStree").append("&emsp;");
+       //    }
+       //    //添加目录树
+         //   $("#cataStree").append("<a href='#t"+con+"'>"+$(hs[i]).text()+"</a><br>");
+        //    con++;
+        //}
+        $("#cataStree").append("<a href='#"+hs[i].getAttribute("id")+"'>"+hs[i].getAttribute("id")+"</a><br>");
+    }
+});
+</script>
+<body>
+<div id="cataStree" class="cata"></div>
+    {% for img in images %}
+    <div id="{{img.name}}">{{ img.data|safe }}</div><br/>
+    {% endfor %}
+
+</body>

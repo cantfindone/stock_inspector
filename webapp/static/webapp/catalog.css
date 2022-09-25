@@ -1,0 +1,34 @@
+a:link{
+     text-decoration:none;
+     color:black;
+    /* 指正常的未被访问过的链接*/
+}
+ a:visited{
+     text-decoration:none;
+     color:black;
+    /*指已经访问过的链接*/
+}
+a:hover{
+     text-decoration:none;
+     color: blue;
+    /*指鼠标在链接*/
+}
+ a:active{
+     text-decoration:none;
+     color:black;
+    /* 指正在点的链接*/
+}
+ .cata {
+     padding: 5px 5px 5px 5px;
+     width: 8%;
+     height: 100%;
+     overflow:hidden;
+     overflow-y: visible;
+     float: left;
+     text-overflow:ellipsis;
+     position: fixed;
+     top: 0px;
+     left: 0px;
+     line-height:40px;
+     background: #eee
+}

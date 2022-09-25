@@ -1,0 +1,100 @@
+ .table-box {
+     margin: 100px auto;
+     width: 1024px;
+}
+/* 滚动条宽度 */
+ ::-webkit-scrollbar {
+     width: 8px;
+     background-color: transparent;
+}
+/* 滚动条颜色 */
+ ::-webkit-scrollbar-thumb {
+     background-color: #27314d;
+}
+ table {
+     width: 100%;
+     border-spacing: 0px;
+     border-collapse: collapse;
+}
+ table caption{
+     font-weight: bold;
+     font-size: 24px;
+     line-height: 50px;
+}
+ table th, table td {
+     height: 50px;
+     text-align: center;
+     border: 1px solid gray;
+}
+ table thead {
+     color: white;
+     background-color: #38F;
+}
+ table tbody {
+     display: block;
+     width: calc(100% + 8px);
+    /*这里的8px是滚动条的宽度*/
+     height: 900px;
+     overflow-y: auto;
+     -webkit-overflow-scrolling: touch;
+}
+ table tfoot {
+     background-color: #71ea71;
+}
+ table thead tr, table tbody tr, table tfoot tr {
+     box-sizing: border-box;
+     table-layout: fixed;
+     display: table;
+     width: 100%;
+}
+ table tbody tr:nth-of-type(odd) {
+     background: #EEE;
+}
+ table tbody tr:nth-of-type(even) {
+     background: #FFF;
+}
+ table tbody tr td{
+     border-bottom: none;
+}
+ .menu {
+     background: #000;
+     width: 120px;
+     border: 1px solid #ccc;
+     position: absolute;
+     box-shadow: 2px 2px 8px 1px rgba(192,192,192,0.3);
+     display: none;
+}
+ .menu div {
+     list-style: none;
+     width: 120%;
+     background: #000;
+     color: #CC1A1A;
+}
+ .menu div span {
+     display: inline-block;
+     text-decoration: none;
+     color: #666;
+     width: 90%;
+     padding: 5px 5px 5px 5px;
+     text-align: right;
+     cursor: pointer;
+}
+ .menu div:first-of-type {
+     border-radius: 0px 0px 0 0;
+}
+ .menu div span:hover{
+     background: #000;
+     color: #CC1A1A;
+}
+
+.factor-container{
+display: flex;
+text-align: center;
+}
+
+.factor{
+position: float;
+flex: 50%;
+
+
+}

@@ -1,0 +1,17 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'webapp/style.css' %}">
+<script src="{% static 'webapp/menu.js' %}"></script>
+
+{{ df|safe }}
+
+<div class="menu" id="menu">
+    <div><a href="javascript:void(0);" onclick="stock_indicator();"><span>历史指标</span></a></div>
+    <div><a href="javascript:void(0);" onclick="stock_indicator_plot();"><span>历史指标图</span></a></div>
+    <div><a href="javascript:void(0);" onclick="finance_indicator_plot();"><span>历史财务指标图</span></a></div>
+    <div><a href="javascript:void(0);" onclick="balance();"><span>资产负债表</span></a></div>
+    <div><a href="javascript:void(0);" onclick="balance_plot();"><span>资产负债图</span></a></div>
+    <div><a href="javascript:void(0);" onclick="cash();"><span>现金流量表</span></a></div>
+    <div><a href="javascript:void(0);" onclick="cash_plot();"><span>现金流量图</span></a></div>
+    <div><a href="javascript:void(0);" onclick="income();"><span>利润表</span></a></div>
+    <div><a href="javascript:void(0);" onclick="income_plot();"><span>利润图</span></a></div>
+</div>
