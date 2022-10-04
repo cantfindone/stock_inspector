@@ -17,8 +17,8 @@ def get(code):
             stock_cash_flow_sheet_by_report_em_df.set_index("REPORT_DATE", inplace=True)
             stock_cash_flow_sheet_by_report_em_df.index.name = None
             dump_stock(stock_cash_flow_sheet_by_report_em_df, table, code)
-        except:
-            print("cash_flow_df:", stock_cash_flow_sheet_by_report_em_df)
+        except Exception as e:
+            print("get cash_flow_df exception:", e, stock_cash_flow_sheet_by_report_em_df)
     # print(stock_cash_flow_sheet_by_report_em_df.head(2))
     # stock_cash_flow_sheet_by_report_em_df.head(2).T.to_csv("d:\\cash_flow.csv")
     return stock_cash_flow_sheet_by_report_em_df
@@ -34,8 +34,8 @@ def is_good(code):
         df = df.iloc[:5, ::]
         # return df['NETCASH_OPERATE'].sum() > df['NETCASH_INVEST'].sum()
         return df['NETCASH_FINANCE'].mean() < df['NETCASH_OPERATE'].mean() * 0.1 and df['NETCASH_OPERATE'].mean() > 0
-    except:
-        print(code, df)
+    except Exception as e:
+        print("is good except in cash_flow", e, code, df)
         return False
 
 

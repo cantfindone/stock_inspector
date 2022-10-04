@@ -42,9 +42,9 @@ def get(code):
             dump_stock(stock_financial_analysis_indicator_df, table, code)
     # stock_financial_analysis_indicator_df.to_csv("d:\\finance_indicator.csv")
     return stock_financial_analysis_indicator_df[[
-        '日期', '销售毛利率(%)', '销售净利率(%)', '净资产报酬率(%)', '资产报酬率(%)', '主营利润比重', '净资产收益率(%)'
-        , '主营业务收入增长率(%)', '应收账款周转天数(天)', '存货周转天数(天)',
-        '资产负债率(%)', '经营现金净流量对销售收入比率(%)', '经营现金净流量与净利润的比率(%)']][:20]
+        '日期', '存货周转天数(天)', '应收账款周转天数(天)', '销售毛利率(%)', '销售净利率(%)', '主营利润比重',
+        '净资产收益率(%)', '主营业务收入增长率(%)', '资产负债率(%)', '经营现金净流量对销售收入比率(%)',
+        '经营现金净流量与净利润的比率(%)']][:20]
 
 
 def is_good(code):
@@ -52,11 +52,12 @@ def is_good(code):
     try:
         inventory_turnover_days = df['存货周转天数(天)'][:2].is_monotonic_increasing
         account_receivable_turnover_days = df['应收账款周转天数(天)'][:2].is_monotonic_increasing
-        operation_cashflow_profit_ratio = df['经营现金净流量与净利润的比率(%)'][:2].is_monotonic_decreasing
+        operation_cashflow_profit_ratio = df['经营现金净流量与净利润的比率(%)'].astype(float)[
+                                          :2].is_monotonic_decreasing
         return inventory_turnover_days and (
                 operation_cashflow_profit_ratio or df['经营现金净流量与净利润的比率(%)'][1] > 95)
-    except:
-        print(code, df)
+    except Exception as e:
+        print("is good exception in finance_indicator", e, code, df)
         return False
 
 
@@ -68,7 +69,7 @@ def do_enrich(code):
         df['存货周转天数(天)'][0]) < pd.to_numeric(df['存货周转天数(天)'].replace('--', np.nan)).quantile(.3)
     accnt = account_receivable_turnover_days or float(df['应收账款周转天数(天)'][0]) < 60 or float(
         df['应收账款周转天数(天)'][0]) < pd.to_numeric(df['应收账款周转天数(天)'].replace('--', np.nan)).quantile(.3)
-    return 1 if ivnt else 0, 1 if accnt else 0
+    return 2 if ivnt else 0, 1 if accnt else 0
 
 
 def enrich(source_df):

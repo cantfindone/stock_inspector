@@ -12,7 +12,7 @@
      background-color: #27314d;
 }
  table {
-     width: 100%;
+   /*  width: 100%; */
      border-spacing: 0px;
      border-collapse: collapse;
 }
@@ -34,7 +34,7 @@
      display: block;
      width: calc(100% + 8px);
     /*这里的8px是滚动条的宽度*/
-     height: 900px;
+     height: 1005px;
      overflow-y: auto;
      -webkit-overflow-scrolling: touch;
 }

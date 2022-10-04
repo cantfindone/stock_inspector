@@ -37,7 +37,7 @@ def get(code):
             stock_profit_sheet_by_report_em_df = stock_profit_sheet_by_report_em_df.iloc[::-1]
             dump_stock(stock_profit_sheet_by_report_em_df, table, code)
         except Exception as e:
-            print("except occurred", e)
+            print("except occurred in get income", e)
             print("income_df:", stock_profit_sheet_by_report_em_df)
     # print(stock_profit_sheet_by_report_em_df.head(2))
     # stock_profit_sheet_by_report_em_df.head(2).T.to_csv("d:\\income.csv")
@@ -49,6 +49,6 @@ def enrich(source_df):
 
 
 def do_enrich(stock_df):
-    return 1 if stock_df[stock_df['quarter'] == stock_df['quarter'][0]]['DEDUCT_PARENT_NETPROFIT_Q'][
+    return 2 if stock_df[stock_df['quarter'] == stock_df['quarter'][0]]['DEDUCT_PARENT_NETPROFIT_Q'][
                 :2].is_monotonic_decreasing else 0, 1 if stock_df['DEDUCT_PARENT_NETPROFIT_Q'][
                                                          :2].is_monotonic_decreasing else 0

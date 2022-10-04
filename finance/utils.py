@@ -164,8 +164,8 @@ def plot_columns(df, title=''):
             continue
         try:
             serial = serial.map(lambda x: float(x))
-        except:
-            print(serial[-5:])
+        except Exception as e:
+            print("plot excepton in utils", e, serial[-5:])
             continue
 
         serial.plot(kind='line', figsize=(20, 10), title=title + c, grid=True)
