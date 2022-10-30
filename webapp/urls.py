@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views, performance_views, ir_views, account_views,indicator_views, balance_views,cashflow_views,income_views,holding_views
+from . import views, performance_views, ir_views, account_views,indicator_views, balance_views,cashflow_views,income_views,holding_views,zygc_views
 
 app_name = 'webapp'
 urlpatterns = [
@@ -21,5 +21,7 @@ urlpatterns = [
     path('stock/<str:code>/<str:name>/cash_plot', cashflow_views.plot, name='cash_plot'),
     path('stock/<str:code>/<str:name>/income', income_views.get, name='income'),
     path('stock/<str:code>/<str:name>/income_plot', income_views.plot, name='income_plot'),
+    path('stock/<str:code>/<str:name>/zygc', zygc_views.get, name='zygc'),
+    path('stock/<str:code>/<str:name>/zygc_plot', zygc_views.plot, name='zygc_plot'),
     # path('stock', stock_views.fetch, name='fetch'),
 ]

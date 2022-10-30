@@ -17,7 +17,7 @@ def plot(request, code, name):
     df.set_index("trade_date", inplace=True)
     df = df.iloc[::-1]
     df = df.iloc[:, 1:]
-    print(df.head())
+    # print(df.head())
     images = plot_columns(df, title=name)
     context = {'images': images}
     return render(request, 'webapp/plots.html', context)
@@ -26,8 +26,9 @@ def plot(request, code, name):
 def plot_finance(request, code, name):
     df = finance_indicator.get(code)
     df.set_index("日期", inplace=True)
+    df.index = df.index.map(lambda x: x.replace('-', ''))
     df = df.iloc[::-1]
-    print(df.head()['存货周转天数(天)'])
+    # print(df.head()['存货周转天数(天)'])
     # df = df.iloc[:, 1:]
     images = plot_columns(df, title=name)
     context = {'images': images}

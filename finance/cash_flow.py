@@ -1,9 +1,10 @@
 import akshare as ak
 
-from finance import utils
-from finance.utils import load_stock, dump_stock
+from finance import utils, const
+from finance.utils import load_stock, dump_stock, cache
 
 
+@cache.memoize(typed=True, expire=const.HALF_DAY)
 def get(code):
     table = 'cash_flow'
     stock_cash_flow_sheet_by_report_em_df = load_stock(table, code)
@@ -18,12 +19,12 @@ def get(code):
             stock_cash_flow_sheet_by_report_em_df.index.name = None
             dump_stock(stock_cash_flow_sheet_by_report_em_df, table, code)
         except Exception as e:
-            print("get cash_flow_df exception:", e, stock_cash_flow_sheet_by_report_em_df)
+            print("get cash_flow_df exception:", e.__cause__, e, code)
     # print(stock_cash_flow_sheet_by_report_em_df.head(2))
     # stock_cash_flow_sheet_by_report_em_df.head(2).T.to_csv("d:\\cash_flow.csv")
     return stock_cash_flow_sheet_by_report_em_df
 
-
+@cache.memoize(typed=True, expire=const.HALF_DAY)
 def is_good(code):
     df = get(code)
     if df is None:
@@ -38,6 +39,6 @@ def is_good(code):
         print("is good except in cash_flow", e, code, df)
         return False
 
-
+@cache.memoize(typed=True, expire=const.HALF_DAY)
 def enrich(source_df):
     source_df['cash_flow'] = source_df['id'].map(lambda c: 1 if is_good(c) else 0)

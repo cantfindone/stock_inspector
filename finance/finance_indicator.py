@@ -5,11 +5,11 @@ import matplotlib
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+from finance import const
+from finance.utils import dump_stock, load_stock, cache
 
-from finance.utils import dump_stock, load_stock
 
-
-# @lru_cache
+@cache.memoize(typed=True, expire=const.HALF_DAY)
 def get(code):
     """
 
@@ -47,11 +47,12 @@ def get(code):
         '经营现金净流量与净利润的比率(%)']][:20]
 
 
+@cache.memoize(typed=True, expire=const.HALF_DAY)
 def is_good(code):
     df = get(code)
     try:
-        inventory_turnover_days = df['存货周转天数(天)'][:2].is_monotonic_increasing
-        account_receivable_turnover_days = df['应收账款周转天数(天)'][:2].is_monotonic_increasing
+        inventory_turnover_days = df['存货周转天数(天)'][:2].astype(float).is_monotonic_increasing
+        account_receivable_turnover_days = df['应收账款周转天数(天)'][:2].astype(float).is_monotonic_increasing
         operation_cashflow_profit_ratio = df['经营现金净流量与净利润的比率(%)'].astype(float)[
                                           :2].is_monotonic_decreasing
         return inventory_turnover_days and (
@@ -61,37 +62,36 @@ def is_good(code):
         return False
 
 
+@cache.memoize(typed=True, expire=const.HALF_DAY)
 def do_enrich(code):
     df = get(code)
+    df = df.replace('--', np.nan)
+    df[df.columns[1:]] = df[df.columns[1:]].astype(float)
     inventory_turnover_days = df['存货周转天数(天)'][:2].is_monotonic_increasing
-    account_receivable_turnover_days = df['应收账款周转天数(天)'][:2].is_monotonic_increasing
+    account_receivable_turnover_days = df['存货周转天数(天)'][:2].is_monotonic_increasing
+    ivnt = inventory_turnover_days or df['存货周转天数(天)'][0] < 60 or df['存货周转天数(天)'][0] < df[
+        '存货周转天数(天)'].quantile(.3)
+    accnt = account_receivable_turnover_days or df['应收账款周转天数(天)'][0] < 60 or df['应收账款周转天数(天)'][0] < \
+            df['应收账款周转天数(天)'].quantile(.3)
+    return 1 if ivnt else 0, 1 if accnt else 0
+
+
+def do_enrich2(code):
+    df = get(code)
+    inventory_turnover_days = df['存货周转天数(天)'][:2].astype(float).is_monotonic_increasing
+    account_receivable_turnover_days = df['应收账款周转天数(天)'][:2].astype(float).is_monotonic_increasing
     ivnt = inventory_turnover_days or float(df['存货周转天数(天)'][0]) < 60 or float(
         df['存货周转天数(天)'][0]) < pd.to_numeric(df['存货周转天数(天)'].replace('--', np.nan)).quantile(.3)
     accnt = account_receivable_turnover_days or float(df['应收账款周转天数(天)'][0]) < 60 or float(
         df['应收账款周转天数(天)'][0]) < pd.to_numeric(df['应收账款周转天数(天)'].replace('--', np.nan)).quantile(.3)
-    return 2 if ivnt else 0, 1 if accnt else 0
+    return df['存货周转天数(天)'][:2], inventory_turnover_days, float(df['存货周转天数(天)'][0]) < 60, pd.to_numeric(
+        df['存货周转天数(天)'].replace('--', np.nan)).quantile(.3)
 
 
+@cache.memoize(typed=True, expire=const.HALF_DAY)
 def enrich(source_df):
     source_df['存货|应收'] = source_df['id'].map(lambda c: do_enrich(c))
 
 
 if __name__ == "__main__":
-    # for f in FontManager().ttflist:
-    #     print(f.name)
-
-    matplotlib.rc("font", family='Microsoft YaHei')
-    sheet = get("603501")
-
-    print(sheet.columns)
-    sheet.set_index('日期', inplace=True)
-    inttd = sheet['存货周转天数(天)'].replace('--', np.nan).apply(lambda x: float(x))
-    print(inttd)
-
-    inttd = inttd.interpolate()  # Filling in NaN in a Series via linear interpolation.
-    print(inttd)
-    inttd = inttd[::-1]
-    inttd.plot(kind='bar', figsize=(10, 5))
-    plt.show()
-
-    print(is_good('603501'))
+    print(do_enrich2("300327"))

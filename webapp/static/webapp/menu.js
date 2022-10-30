@@ -101,3 +101,12 @@ function income_plot() {
   var a = window.getSelection ? window.getSelection() : document.selection.createRange().text;
   window.open("/stock/" + window.stock_code+ "/" +window.stock_name +"/income_plot")
 }
+function zygc() {
+  var a = window.getSelection ? window.getSelection() : document.selection.createRange().text;
+  window.open("/stock/" + window.stock_code+ "/" +window.stock_name +"/zygc")
+}
+
+function zygc_plot() {
+  var a = window.getSelection ? window.getSelection() : document.selection.createRange().text;
+  window.open("/stock/" + window.stock_code+ "/" +window.stock_name +"/zygc_plot")
+}

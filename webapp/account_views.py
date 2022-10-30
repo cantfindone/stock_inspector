@@ -11,7 +11,7 @@ def plot(request):
     df = stock_account_statistics_em()
     df.set_index("数据日期", inplace=True)
     df = df.iloc[::-1]
-    print(df.head())
+    # print(df.head())
     images = plot_columns(df)
     context = {'images': images}
     return render(request, 'webapp/plots.html', context)

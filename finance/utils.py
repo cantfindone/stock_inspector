@@ -9,7 +9,10 @@ import matplotlib
 import pandas as pd
 import numpy as np
 import pickle
+import warnings
+from diskcache import FanoutCache
 
+warnings.filterwarnings('error')
 import pyarrow.parquet
 
 import os
@@ -60,7 +63,7 @@ def trade_days():
     tool_trade_date_hist_sina_df = ak.tool_trade_date_hist_sina()
     trade_dates = tool_trade_date_hist_sina_df['trade_date'].tolist()
     furthest_trade_date = trade_dates[-1]
-    print(furthest_trade_date)
+    # print(furthest_trade_date)
     with open("data" + os.path.sep + f"trade_date_{furthest_trade_date}", 'wb') as file:
         pickle.dump(trade_dates, file)
     return trade_dates
@@ -94,10 +97,19 @@ def last_trade_day(date):
     return two_trade_days[-1] if two_trade_days[-1] < date else two_trade_days[-2]
 
 
-if __name__ == "__main__":
-    print(today())
-    print(latest_n_trade_days_of(yesterday()))
-    print(last_trade_day(today()))
+#
+# if __name__ == "__main__":
+#     print(today())
+#     print(latest_n_trade_days_of(yesterday()))
+#     print(last_trade_day(today()))
+
+
+def clean_stock(code):
+    code_path = rootPath + f"data/stocks/{code}"
+    if Path(code_path).exists():
+        print(f"making dir:{code_path}")
+        for fn in os.listdir(code_path):
+            os.remove(code_path + '/' + fn)
 
 
 def dump_stock(df, table, code):
@@ -135,12 +147,17 @@ def load_df(file_path):
 
 
 def cal_percentile(is_first_element_target, series):
+    if len(series) < 2:
+        return 0
     target_value = series.iloc[0] if is_first_element_target else series.iloc[-1]
     series_1 = series.sort_values(ascending=True)
     location = np.where(series_1 == target_value)
     if len(location[0]) > 0:
         #         print(location[0][-1])
-        pctl = round(location[0][-1] / (len(series) - 1), 4)
+        try:
+            pctl = round(location[0][-1] / (len(series) - 1), 4)
+        except Warning as e:
+            print("Warning:", e.__cause__, e, location, series)
     else:
         pctl = -1
     return pctl
@@ -167,10 +184,35 @@ def plot_columns(df, title=''):
         except Exception as e:
             print("plot excepton in utils", e, serial[-5:])
             continue
-
-        serial.plot(kind='line', figsize=(20, 10), title=title + c, grid=True)
+        if len(serial) < 30: plt.xticks(range(len(df.index.tolist())), df.index.tolist())
+        serial.plot(kind='line', figsize=(22, 10), title=title + c, grid=True)
         img_stringio = StringIO()
         fig.savefig(img_stringio, format='svg')
         images.append({'name': c, 'data': img_stringio.getvalue()})
         plt.close(fig)
     return images
+
+
+def sum_tuple(tuple_like):
+    return sum(tuple_like)
+
+
+def report_dates(num=2):
+    _today = today()
+    year = _today.year
+    quarter_dates = ["0331", "0630", "0930", "1231"]
+    years = [year - 1, year]
+    dates = []
+    for year in years:
+        dates.extend(list(map(lambda x: datetime.date(year, int(x[:2]), int(x[2:])), quarter_dates)))
+    for d in range(len(dates)):
+        dd = len(dates) - d - 1
+        if dates[dd] < _today:
+            return dates[dd - 1:dd + 1]
+    return dates
+
+
+cache = FanoutCache(directory=rootPath + "data")
+
+if __name__ == "__main__":
+    print(report_dates(2)[0].strftime("%Y%m%d"))

@@ -18,10 +18,10 @@ def get(request, code, name):
 
 def plot(request, code, name):
     df = cash_flow.get(code)
-    df.index = df.index.map(lambda x: x.split(' ')[0])
+    df.index = df.index.map(lambda x: x.split(' ')[0].replace('-', ''))
     df = df.iloc[::-1]
     df = df.iloc[:, 1:]
-    print(df.head())
+    # print(df.head())
     images = plot_columns(df, title=name)
     context = {'images': images}
     return render(request, 'webapp/plots.html', context)

@@ -1,13 +1,16 @@
+import datetime
 import os
-from functools import lru_cache
 from pathlib import Path
 
 import akshare as ak
+import pandas as pd
 
-from finance import utils, finance_indicator, stock_indicator, balance_sheet, cash_flow
+from finance import utils, finance_indicator, stock_indicator, balance_sheet, cash_flow, const
+from finance.utils import cache
 
 
-def get(date='20220630'):
+@cache.memoize(typed=True, expire=const.ONE_HOUR)
+def get():
     """
     业绩报告
     :param date: date="20220331"; choice of {"XXXX0331", "XXXX0630", "XXXX0930", "XXXX1231"}; 从 20100331 开始
@@ -15,25 +18,38 @@ def get(date='20220630'):
        '净利润-净利润', '净利润-同比增长', '净利润-季度环比增长', '每股净资产', '净资产收益率', '每股经营现金流量',
        '销售毛利率', '所处行业', '最新公告日期']
     """
+
+    dates = utils.report_dates(2)
     performance_file_path = "data/performance"
+    latest_report_date = None
     if Path(performance_file_path).exists():
         stock_yjbb_em_df = utils.load_df(performance_file_path)
-        return stock_yjbb_em_df
-    stock_yjbb_em_df = ak.stock_yjbb_em(date=date)
+        stock_yjbb_em_df['最新公告日期'] = pd.to_datetime(stock_yjbb_em_df["最新公告日期"]).dt.date
+        latest_report_date = stock_yjbb_em_df['最新公告日期'].max()
+        if utils.today() - latest_report_date < datetime.timedelta(hours=12):
+            return stock_yjbb_em_df
+    stock_yjbb_em_df = pd.concat([ak.stock_yjbb_em(date=dates[0].strftime('%Y%m%d')),
+                                  ak.stock_yjbb_em(date=dates[1].strftime('%Y%m%d'))])
+    stock_yjbb_em_df.sort_values(['最新公告日期'], ascending=False, inplace=True)
+    stock_yjbb_em_df.drop_duplicates(subset=['股票代码'], inplace=True)
+    stock_yjbb_em_df['最新公告日期'] = pd.to_datetime(stock_yjbb_em_df["最新公告日期"]).dt.date
+    if latest_report_date is not None:
+        stock_yjbb_em_df[stock_yjbb_em_df['最新公告日期'] >= latest_report_date]['股票代码'].map(
+            lambda x: utils.clean_stock(x))
     utils.dump_df(stock_yjbb_em_df, performance_file_path)
     # stock_yjbb_em_df.to_csv("d:\\performance.csv")
     # print(stock_yjbb_em_df)
     return stock_yjbb_em_df
 
 
-@lru_cache
+@cache.memoize(typed=True, expire=const.HALF_DAY)
 def screen_stocks():
     performance_df = get()
     performance_df = performance_df[
         (performance_df['股票代码'] < '800000')
         & (performance_df['营业收入-同比增长'] > 0)
         & (performance_df['净利润-同比增长'] > 5)
-        & (performance_df['净资产收益率'] > 9)
+        # & (performance_df['净资产收益率'] > 9)
         & (performance_df['每股经营现金流量'] > 0)
         & (performance_df['股票代码'].str.startswith('4') == False)
         & (performance_df['股票代码'].str.startswith('68') == False)

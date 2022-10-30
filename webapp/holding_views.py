@@ -3,7 +3,7 @@ from django.shortcuts import render
 
 from finance import finance_indicator, cash_flow, balance_sheet, stock_indicator, income
 from webapp.models import Stock
-
+from finance.utils import sum_tuple
 
 def lists(request):
     stocks = Stock.objects.all().values()
@@ -25,9 +25,11 @@ def enrich_data(df):
 
     # df['score'] = df['finance_indicator'] + df['cash_flow'] + df['balance_sheet'] + df['roe']
     # df['score'] = 1 if df['存货|应收'][0] else 0 + 1 if df['存货|应收'][1] else 0 #+ df['cash_flow'] + df['合同负债'] + df['roe']
-    df['score'] = df['存货|应收'].map(lambda s: s[0] + s[1]) + df['cash_flow'] + df['合同负债'] \
-                  + df['roe|dv|pe|pepctl|pbpctl'].map(lambda s: s[0] + s[1] + s[2] + s[3] + s[4]) \
-                  + df['扣非同比|环比'].map(lambda s: s[0] + s[1])
+    df['score'] = df['存货|应收'].apply(sum_tuple) \
+                  + df['cash_flow'] \
+                  + df['负债|应收'].apply(sum_tuple) \
+                  + df['扣非同比|环比'].apply(sum_tuple) \
+                  + df['roe|dv|pe|pepctl|pbpctl'].apply(sum_tuple)
     df.sort_values(['score'], inplace=True, ascending=False)
     df.reset_index(inplace=True)
     del df['index']
