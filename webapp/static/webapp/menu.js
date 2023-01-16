@@ -30,7 +30,8 @@ window.onload = function () {
       //右键菜单
       document.oncontextmenu = function (e) {
         var e = e || window.event;
-        row = e.path[1].innerHTML.match("<th>\\d+</th>\\s+<td>(\\d+)</td>\\s+<td>(\\S+)</td>")
+//        console.log(e.path[1].innerHTML)
+        row = e.path[1].innerHTML.match("<th>\\d+</th>\\s+<td>(\\S+)</td>\\s+<td>(\\S+)</td>")
         console.log(RegExp.$1)
         console.log(RegExp.$2)
         window.stock_code=RegExp.$1
@@ -60,6 +61,11 @@ window.onload = function () {
 
 function getSelect() {
   "" == (window.getSelection ? window.getSelection() : document.selection.createRange().text) ? alert("请选择需要复制的内容！") : document.execCommand("Copy")
+}
+function xueqiu() {
+  console.log("window.stock_code:"+window.stock_code)
+  var e_type = window.stock_code.startsWith("6")?"SH":"SZ"
+  window.open("https://xueqiu.com/S/"+e_type+window.stock_code)
 }
 function stock_indicator() {
   var a = window.getSelection ? window.getSelection() : document.selection.createRange().text;
@@ -92,6 +98,10 @@ function cash_plot() {
   var a = window.getSelection ? window.getSelection() : document.selection.createRange().text;
   window.open("/stock/" + window.stock_code+ "/" +window.stock_name +"/cash_plot")
 }
+function cash_revenue_plot() {
+  var a = window.getSelection ? window.getSelection() : document.selection.createRange().text;
+  window.open("/stock/" + window.stock_code+ "/" +window.stock_name +"/cash_revenue_plot")
+}
 function income() {
   var a = window.getSelection ? window.getSelection() : document.selection.createRange().text;
   window.open("/stock/" + window.stock_code+ "/" +window.stock_name +"/income")
@@ -109,4 +119,12 @@ function zygc() {
 function zygc_plot() {
   var a = window.getSelection ? window.getSelection() : document.selection.createRange().text;
   window.open("/stock/" + window.stock_code+ "/" +window.stock_name +"/zygc_plot")
+}
+function members() {
+  var a = window.getSelection ? window.getSelection() : document.selection.createRange().text;
+  window.open("/industry/" + window.stock_code+ "/" +window.stock_name)
+}
+function iplot() {
+  var a = window.getSelection ? window.getSelection() : document.selection.createRange().text;
+  window.open("/industry/" + window.stock_code+ "/" +window.stock_name+"/plot")
 }

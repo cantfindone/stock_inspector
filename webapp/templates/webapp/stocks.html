@@ -1,10 +1,36 @@
 {% load static %}
 <link rel="stylesheet" href="{% static 'webapp/style.css' %}">
 <script src="{% static 'webapp/menu.js' %}"></script>
-
+<script src="{% static 'webapp/jquery-3.3.1.min.js' %}"></script>
+<script>
+    function AjaxSubmit(){
+        /*1、post方式发送数据*/
+       /* $.ajax({
+            url:"test_ajax/",
+            type:'POST',
+            data:{'key':'value'},
+            dataType: "json",
+            headers: { "X-CSRFToken": "{{ csrf_token }}" },//Django中表单提交都需要csrf验证
+            success: function (arg) {
+            }
+            error：function(){
+            }
+        });
+        */
+        /*2、get方式请求数据*/
+        $.ajax({
+            url:"test_ajax/",
+            type:'GET',
+            success: function (data) {
+            }
+        });
+    }
+</script>
+<div class="alert"></div><div id="msg"/>
 {{ df|safe }}
 
 <div class="menu" id="menu">
+    <div><a href="javascript:void(0);" onclick="xueqiu();"><span>去雪球看该股</span></a></div>
     <div><a href="javascript:void(0);" onclick="stock_indicator();"><span>历史指标</span></a></div>
     <div><a href="javascript:void(0);" onclick="stock_indicator_plot();"><span>历史指标图</span></a></div>
     <div><a href="javascript:void(0);" onclick="finance_indicator_plot();"><span>历史财务指标图</span></a></div>
@@ -12,6 +38,7 @@
     <div><a href="javascript:void(0);" onclick="balance_plot();"><span>资产负债图</span></a></div>
     <div><a href="javascript:void(0);" onclick="cash();"><span>现金流量表</span></a></div>
     <div><a href="javascript:void(0);" onclick="cash_plot();"><span>现金流量图</span></a></div>
+    <div><a href="javascript:void(0);" onclick="cash_revenue_plot();"><span>营收现金率图</span></a></div>
     <div><a href="javascript:void(0);" onclick="income();"><span>利润表</span></a></div>
     <div><a href="javascript:void(0);" onclick="income_plot();"><span>利润图</span></a></div>
     <div><a href="javascript:void(0);" onclick="zygc();"><span>主营构成表</span></a></div>

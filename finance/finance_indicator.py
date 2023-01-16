@@ -1,15 +1,14 @@
-from functools import lru_cache
+import datetime
+import math
 
 import akshare as ak
-import matplotlib
 import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt
-from finance import const
-from finance.utils import dump_stock, load_stock, cache
+
+from finance import const, utils
+from finance.utils import cache
 
 
-@cache.memoize(typed=True, expire=const.HALF_DAY)
 def get(code):
     """
 
@@ -34,17 +33,20 @@ def get(code):
        '3年以内预付货款(元)', '1年以内其它应收款(元)', '1-2年以内其它应收款(元)', '2-3年以内其它应收款(元)',
        '3年以内其它应收款(元)']
     """
-    table = 'finance_indicator'
-    stock_financial_analysis_indicator_df = load_stock(table, code)
-    if stock_financial_analysis_indicator_df is None:
-        stock_financial_analysis_indicator_df = ak.stock_financial_analysis_indicator(symbol=code)
-        if stock_financial_analysis_indicator_df is not None:
-            dump_stock(stock_financial_analysis_indicator_df, table, code)
-    # stock_financial_analysis_indicator_df.to_csv("d:\\finance_indicator.csv")
-    return stock_financial_analysis_indicator_df[[
-        '日期', '存货周转天数(天)', '应收账款周转天数(天)', '销售毛利率(%)', '销售净利率(%)', '主营利润比重',
-        '净资产收益率(%)', '主营业务收入增长率(%)', '资产负债率(%)', '经营现金净流量对销售收入比率(%)',
-        '经营现金净流量与净利润的比率(%)']][:20]
+    key = 'finance_indicator' + code
+    df = cache.get(key)
+    if df is None:
+        df = ak.stock_financial_analysis_indicator(symbol=code)
+        if df is not None:
+            df = df[[
+                '日期', '存货周转天数(天)', '应收账款周转天数(天)', '销售毛利率(%)', '销售净利率(%)', '主营利润比重',
+                '净资产收益率(%)', '主营业务收入增长率(%)', '资产负债率(%)', '经营现金净流量对销售收入比率(%)',
+                '经营现金净流量与净利润的比率(%)']][:28]
+            now = datetime.datetime.now()
+            days = (pd.to_datetime(df['日期'])[0] + datetime.timedelta(days=(90 if now.month < 12 else 180)) - now).days
+            days = max(days, 5)
+            cache.set(key, df, expire=const.ONE_DAY * days, tag=code)
+    return df
 
 
 @cache.memoize(typed=True, expire=const.HALF_DAY)
@@ -62,36 +64,39 @@ def is_good(code):
         return False
 
 
-@cache.memoize(typed=True, expire=const.HALF_DAY)
+# @cache.memoize(typed=True, expire=const.HALF_DAY)
 def do_enrich(code):
     df = get(code)
     df = df.replace('--', np.nan)
+    df = df.fillna(0)
     df[df.columns[1:]] = df[df.columns[1:]].astype(float)
     inventory_turnover_days = df['存货周转天数(天)'][:2].is_monotonic_increasing
-    account_receivable_turnover_days = df['存货周转天数(天)'][:2].is_monotonic_increasing
-    ivnt = inventory_turnover_days or df['存货周转天数(天)'][0] < 60 or df['存货周转天数(天)'][0] < df[
-        '存货周转天数(天)'].quantile(.3)
-    accnt = account_receivable_turnover_days or df['应收账款周转天数(天)'][0] < 60 or df['应收账款周转天数(天)'][0] < \
-            df['应收账款周转天数(天)'].quantile(.3)
-    return 1 if ivnt else 0, 1 if accnt else 0
+    # inventory_turnover_days = inventory_turnover_days and df['存货周转天数(天)'][0] < df['存货周转天数(天)'].quantile(
+    #     .9)
+    account_receivable_turnover_days = df['应收账款周转天数(天)'][:2].is_monotonic_increasing
+    # account_receivable_turnover_days = account_receivable_turnover_days and df['应收账款周转天数(天)'][0] < df[
+    #     '应收账款周转天数(天)'].quantile(.7)
+    ivnt = inventory_turnover_days  # or df['应收账款周转天数(天)'][0] < 60 or df['应收账款周转天数(天)'][0] < df[
+    # '应收账款周转天数(天)'].quantile(.3)
+    accnt = account_receivable_turnover_days
+    # or df['应收账款周转天数(天)'][0] < 60 or df['应收账款周转天数(天)'][0] < \
+    # df['应收账款周转天数(天)'].quantile(.3)
+    accnt_t_days = round((100 - df['应收账款周转天数(天)'][0]) / 100, 2)
+    mean8 = df['销售净利率(%)'][:8].mean()
+    net_margin = round(math.log10(mean8), 2) if mean8 > 0 else -1
+    return 0.5 if ivnt else 0, 0.5 if accnt else 0, round(1 - utils.cal_percentile(True, df['存货周转天数(天)']),
+                                                          2), round(
+        1 - utils.cal_percentile(True, df['应收账款周转天数(天)']),
+        2), accnt_t_days if accnt_t_days is not np.nan else 0, net_margin
 
 
-def do_enrich2(code):
-    df = get(code)
-    inventory_turnover_days = df['存货周转天数(天)'][:2].astype(float).is_monotonic_increasing
-    account_receivable_turnover_days = df['应收账款周转天数(天)'][:2].astype(float).is_monotonic_increasing
-    ivnt = inventory_turnover_days or float(df['存货周转天数(天)'][0]) < 60 or float(
-        df['存货周转天数(天)'][0]) < pd.to_numeric(df['存货周转天数(天)'].replace('--', np.nan)).quantile(.3)
-    accnt = account_receivable_turnover_days or float(df['应收账款周转天数(天)'][0]) < 60 or float(
-        df['应收账款周转天数(天)'][0]) < pd.to_numeric(df['应收账款周转天数(天)'].replace('--', np.nan)).quantile(.3)
-    return df['存货周转天数(天)'][:2], inventory_turnover_days, float(df['存货周转天数(天)'][0]) < 60, pd.to_numeric(
-        df['存货周转天数(天)'].replace('--', np.nan)).quantile(.3)
-
-
-@cache.memoize(typed=True, expire=const.HALF_DAY)
 def enrich(source_df):
-    source_df['存货|应收'] = source_df['id'].map(lambda c: do_enrich(c))
+    source_df['存货|应收|天数|净利率'] = source_df['id'].map(lambda c: do_enrich(c))
 
 
 if __name__ == "__main__":
-    print(do_enrich2("300327"))
+    # start = datetime.datetime.now()
+    # print(get("601012")['销售毛利率(%)'])
+    # end = datetime.datetime.now()
+    # print(end - start)
+    print(get('600519').head(2).T)

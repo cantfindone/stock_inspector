@@ -16,7 +16,7 @@ def plot(request, code, name):
     df = stock_indicator.get(code)
     df.set_index("trade_date", inplace=True)
     df = df.iloc[::-1]
-    df = df.iloc[:, 1:]
+    df = df.iloc[:, 2:]
     # print(df.head())
     images = plot_columns(df, title=name)
     context = {'images': images}

@@ -1,9 +1,9 @@
-from django.http import HttpResponse, Http404, HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
-from django.views import generic
+from django.views import generic, View
 
-from webapp.models import Question, Choice
+from webapp.models import Question, Choice, Stock
 
 
 def index(request):
@@ -20,6 +20,24 @@ class DetailView(generic.DetailView):
 class ResultsView(generic.DetailView):
     model = Question
     template_name = 'webapp/results.html'
+
+
+class StockCreateView(View):
+    def get(self, request, id, name):
+        data = {'id': id, 'name': name}
+        return JsonResponse(data)
+
+    def post(self, request):
+        data = {}
+        try:
+            id = request.POST.get('id')
+            name = request.POST.get('name')
+            stock = Stock(id=id, name=name, xchg='sz' if id[0] < '6' else 'sh')
+            stock.save()
+            data['res'] = 'success'
+        except Exception as e:
+            data['res'] = e.__cause__
+        return JsonResponse(data)
 
 
 def vote(request, question_id):

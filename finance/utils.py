@@ -22,6 +22,7 @@ from pandas.core.dtypes.common import is_numeric_dtype
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = curPath[:curPath.find("stock_inspector\\") + len("stock_inspector\\")]  # stock_inspector，也就是项目的根路径
+cache = FanoutCache(directory=rootPath + "data")
 
 
 # dataPath = os.path.abspath(rootPath + 'data\\')
@@ -41,6 +42,14 @@ def prefix(code):
         return 'sz' + code
 
 
+def parse_date(number_str):
+    """
+    :param number_str: 20221103 格式
+    :return: datetime.datetime
+    """
+    return datetime.datetime.strptime(number_str, "%Y%m%d").date()
+
+
 def today():
     return datetime.date.today()
 
@@ -56,7 +65,7 @@ def trade_days():
             furthest_date_str = fn[11:]
             furthest_date = datetime.date.fromisoformat(furthest_date_str)
             if furthest_date >= today():
-                with open("data" + os.path.sep + fn, 'rb') as file:
+                with open(rootPath + "data" + os.path.sep + fn, 'rb') as file:
                     return pickle.load(file)
             else:
                 os.remove("data" + os.path.sep + fn)
@@ -64,7 +73,7 @@ def trade_days():
     trade_dates = tool_trade_date_hist_sina_df['trade_date'].tolist()
     furthest_trade_date = trade_dates[-1]
     # print(furthest_trade_date)
-    with open("data" + os.path.sep + f"trade_date_{furthest_trade_date}", 'wb') as file:
+    with open(rootPath + "data" + os.path.sep + f"trade_date_{furthest_trade_date}", 'wb') as file:
         pickle.dump(trade_dates, file)
     return trade_dates
 
@@ -77,7 +86,7 @@ def latest_n_trade_days_of(date, n=2):
     :param date:
     :return: 交易日期列表（如果date是交易日，将包含date)
     """
-    trade_dates = trade_days()
+    trade_dates = trade_days().copy()
     pop = trade_dates.pop()
     while pop > date:
         pop = trade_dates.pop()
@@ -95,6 +104,17 @@ def last_trade_day(date):
     """
     two_trade_days = latest_n_trade_days_of(date, n=2)
     return two_trade_days[-1] if two_trade_days[-1] < date else two_trade_days[-2]
+
+
+# @cache.memoize()
+def trade_day(date):
+    """
+    获取指定日期之前的交易日（包含指定日期）
+    :param date:
+    :return: 指定日期之前的交易日（包含指定日期）
+    """
+    two_trade_days = latest_n_trade_days_of(date, n=2)
+    return two_trade_days[-1]
 
 
 #
@@ -199,7 +219,7 @@ def sum_tuple(tuple_like):
 
 def report_dates(num=2):
     _today = today()
-    year = _today.year
+    year = (_today - datetime.timedelta(days=90)).year
     quarter_dates = ["0331", "0630", "0930", "1231"]
     years = [year - 1, year]
     dates = []
@@ -207,12 +227,10 @@ def report_dates(num=2):
         dates.extend(list(map(lambda x: datetime.date(year, int(x[:2]), int(x[2:])), quarter_dates)))
     for d in range(len(dates)):
         dd = len(dates) - d - 1
-        if dates[dd] < _today:
+        if dates[dd] < _today and dates[dd].month != 12:
             return dates[dd - 1:dd + 1]
     return dates
 
-
-cache = FanoutCache(directory=rootPath + "data")
 
 if __name__ == "__main__":
     print(report_dates(2)[0].strftime("%Y%m%d"))

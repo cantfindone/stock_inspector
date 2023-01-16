@@ -1,12 +1,12 @@
 from django.shortcuts import render
 from pandas.core.dtypes.common import is_numeric_dtype
 
-from finance import cash_flow
+from finance import cash_flow_quarter
 from finance.utils import plot_columns
 
 
 def get(request, code, name):
-    df = cash_flow.get(code)
+    df = cash_flow_quarter.get(code)
     df.index = df.index.map(lambda x: x.split(' ')[0])
     df = df.iloc[:5, :]
     df.loc['mean'] = df.apply(lambda s: s.mean() if is_numeric_dtype(s) else s[-1])
@@ -17,7 +17,7 @@ def get(request, code, name):
 
 
 def plot(request, code, name):
-    df = cash_flow.get(code)
+    df = cash_flow_quarter.get(code)
     df.index = df.index.map(lambda x: x.split(' ')[0].replace('-', ''))
     df = df.iloc[::-1]
     df = df.iloc[:, 1:]

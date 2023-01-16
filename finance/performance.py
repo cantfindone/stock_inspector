@@ -20,6 +20,7 @@ def get():
     """
 
     dates = utils.report_dates(2)
+    print("dates:", dates)
     performance_file_path = "data/performance"
     latest_report_date = None
     if Path(performance_file_path).exists():
