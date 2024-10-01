@@ -30,8 +30,9 @@ window.onload = function () {
       //右键菜单
       document.oncontextmenu = function (e) {
         var e = e || window.event;
-//        console.log(e.path[1].innerHTML)
-        row = e.path[1].innerHTML.match("<th>\\d+</th>\\s+<td>(\\S+)</td>\\s+<td>(\\S+)</td>")
+        console.log(e.srcElement.parentElement)
+//        row = e.path[1].innerHTML.match("<th>\\d+</th>\\s+<td>(\\S+)</td>\\s+<td>(\\S+)</td>")
+        row = e.srcElement.parentElement.innerHTML.match("<th>\\d+</th>\\s+<td>(\\S+)</td>\\s+<td>(\\S+)</td>")
         console.log(RegExp.$1)
         console.log(RegExp.$2)
         window.stock_code=RegExp.$1

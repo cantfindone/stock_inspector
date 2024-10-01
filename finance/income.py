@@ -15,10 +15,11 @@ def get(code):
         try:
             df = ak.stock_profit_sheet_by_report_em(symbol=utils.prefix(code))
             df = df[
-                ['SECURITY_CODE', 'REPORT_DATE', 'UPDATE_DATE', 'TOTAL_OPERATE_INCOME', 'TOTAL_OPERATE_INCOME_YOY',
-                 'OPERATE_INCOME',
-                 'OPERATE_INCOME_YOY', 'TOTAL_OPERATE_COST', 'TOTAL_OPERATE_COST_YOY', 'OPERATE_COST',
-                 'OPERATE_COST_YOY', 'RESEARCH_EXPENSE', 'SALE_EXPENSE', 'FINANCE_EXPENSE', 'FAIRVALUE_CHANGE_INCOME',
+                ['SECURITY_CODE', 'REPORT_DATE', 'UPDATE_DATE', 'OPERATE_INCOME', 'OPERATE_INCOME_YOY',
+                 # 'TOTAL_OPERATE_INCOME', 'TOTAL_OPERATE_INCOME_YOY',
+                 # 'TOTAL_OPERATE_COST', 'TOTAL_OPERATE_COST_YOY', 'OPERATE_COST',
+                 # 'OPERATE_COST_YOY', 'RESEARCH_EXPENSE', 'SALE_EXPENSE', 'FINANCE_EXPENSE',
+                 # 'FAIRVALUE_CHANGE_INCOME',
                  'INVEST_INCOME', 'OPERATE_PROFIT', 'OPERATE_PROFIT_YOY', 'TOTAL_PROFIT', 'TOTAL_PROFIT_YOY',
                  'NETPROFIT', 'NETPROFIT_YOY', 'PARENT_NETPROFIT', 'PARENT_NETPROFIT_YOY', 'DEDUCT_PARENT_NETPROFIT',
                  'DEDUCT_PARENT_NETPROFIT_YOY']]
@@ -42,10 +43,12 @@ def get(code):
                         df.loc[d, 'OPERATE_INCOME']
             df = df.iloc[::-1]
             now = datetime.datetime.now()
-            days = (pd.to_datetime(df.index)[0] + datetime.timedelta(days=(90 if now.month < 12 else 180)) - now).days
+            report_date = pd.to_datetime(df.index)[0]
+            days = (report_date + datetime.timedelta(days=(120 if report_date.month != 9 else 180)) - now).days
             days = max(days, 5)
-            # print("days to cache:", days)
-            cache.set(key, df, expire=const.ONE_DAY * days, tag=code)
+            # print(key, 'expire at ', datetime.datetime.fromtimestamp(cache.get(key, expire_time=True)[1]),
+            #       tag=report_date.strftime('%Y%m%d'))
+            cache.set(key, df, expire=const.ONE_DAY * days, tag=report_date.strftime('%Y%m%d'))
         except Exception as e:
             print("except occurred in get income", e.__cause__, e)
             print("income_df:", df)
@@ -87,13 +90,13 @@ def get_indicator(code, indicator, num=1):
 
 if __name__ == "__main__":
     # start = datetime.datetime.now()
-    # s = get("301302")
-    # quarter_ = s[s['quarter'] == s['quarter'][0]]
-    # # growth = quarter_['DEDUCT_PARENT_NETPROFIT_Q'][0] / quarter_['DEDUCT_PARENT_NETPROFIT_Q'][1] - 1
-    # print(s[['DEDUCT_PARENT_NETPROFIT_Q', 'quarter']])
+    s = get("601377")
+    quarter_ = s[s['quarter'] == s['quarter'][0]]
+    # growth = quarter_['DEDUCT_PARENT_NETPROFIT_Q'][0] / quarter_['DEDUCT_PARENT_NETPROFIT_Q'][1] - 1
+    print(s[['DEDUCT_PARENT_NETPROFIT_Q', 'quarter']])
     # end = datetime.datetime.now()
     # print(end - start)
     # # cache.delete("income300327")
-    df = ak.stock_profit_sheet_by_report_em(symbol=utils.prefix('300601'))
-    # df.to_csv('income.csv')
-    print(df['FINANCE_EXPENSE'])
+    # df = ak.stock_profit_sheet_by_report_em(symbol=utils.prefix('300601'))
+    # # df.to_csv('income.csv')
+    # print(df['FINANCE_EXPENSE'])

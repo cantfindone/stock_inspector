@@ -14,12 +14,13 @@ def get(code):
         try:
             df = ak.stock_profit_sheet_by_quarterly_em(symbol=utils.prefix(code))
             df = df[
-                ['SECURITY_CODE', 'REPORT_DATE', 'UPDATE_DATE', 'TOTAL_OPERATE_INCOME', 'TOTAL_OPERATE_INCOME_QOQ',
-                 'OPERATE_INCOME',
-                 'OPERATE_INCOME_QOQ', 'TOTAL_OPERATE_COST', 'TOTAL_OPERATE_COST_QOQ', 'OPERATE_COST',
-                 'OPERATE_COST_QOQ', 'RESEARCH_EXPENSE',
-                 'RESEARCH_EXPENSE_QOQ', 'SALE_EXPENSE', 'SALE_EXPENSE_QOQ', 'FAIRVALUE_CHANGE_INCOME', 'INVEST_INCOME',
-                 'OPERATE_PROFIT', 'OPERATE_PROFIT_QOQ'
+                ['SECURITY_CODE', 'REPORT_DATE', 'UPDATE_DATE',
+                 # 'TOTAL_OPERATE_INCOME', 'TOTAL_OPERATE_INCOME_QOQ','TOTAL_OPERATE_COST', 'TOTAL_OPERATE_COST_QOQ',
+                 'OPERATE_INCOME', 'OPERATE_INCOME_QOQ',
+                 # 'OPERATE_COST',
+                 # 'OPERATE_COST_QOQ', 'RESEARCH_EXPENSE', 'RESEARCH_EXPENSE_QOQ', 'SALE_EXPENSE', 'SALE_EXPENSE_QOQ',
+                 # 'FAIRVALUE_CHANGE_INCOME',
+                 'INVEST_INCOME', 'OPERATE_PROFIT', 'OPERATE_PROFIT_QOQ'
                     , 'TOTAL_PROFIT', 'TOTAL_PROFIT_QOQ', 'NETPROFIT', 'NETPROFIT_QOQ'
                     , 'PARENT_NETPROFIT', 'PARENT_NETPROFIT_QOQ', 'DEDUCT_PARENT_NETPROFIT',
                  'DEDUCT_PARENT_NETPROFIT_QOQ']]
@@ -33,10 +34,13 @@ def get(code):
                 df.loc[d, 'year'] = year
                 df.loc[d, 'quarter'] = quarter
             now = datetime.datetime.now()
-            days = (pd.to_datetime(df.index)[0] + datetime.timedelta(days=(90 if now.month < 12 else 180)) - now).days
+            report_date = pd.to_datetime(df.index)[0]
+            days = (report_date + datetime.timedelta(days=(120 if report_date.month != 9 else 180)) - now).days
             days = max(days, 5)
             # print("days to cache:", days)
-            cache.set(key, df, expire=const.ONE_DAY * days, tag=code)
+            cache.set(key, df, expire=const.ONE_DAY * days, tag=report_date.strftime('%Y%m%d'))
+            # print(key, 'expire at ', datetime.datetime.fromtimestamp(cache.get(key, expire_time=True)[1]),
+            #       tag=report_date.strftime('%Y%m%d'))
         except Exception as e:
             print("except occurred in get income", e.__cause__, e)
             print("income_df:", df)

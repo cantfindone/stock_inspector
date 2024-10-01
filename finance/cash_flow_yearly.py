@@ -21,9 +21,12 @@ def get(code):
             df.set_index("REPORT_DATE", inplace=True)
             df.index.name = None
             df = df.fillna(0)
-            days = (pd.to_datetime(df.index)[0] + datetime.timedelta(days=365) - datetime.datetime.now()).days
+            report_date = pd.to_datetime(df.index)[0]
+            days = (report_date + datetime.timedelta(days=450) - datetime.datetime.now()).days
             days = max(days, 5)
-            cache.set(key, df, expire=const.ONE_DAY * days, tag=code)
+            cache.set(key, df, expire=const.ONE_DAY * days, tag=report_date.strftime('%Y%m%d'))
+            # print(key, 'expire at ', datetime.datetime.fromtimestamp(cache.get(key, expire_time=True)[1]),
+            #       tag=report_date.strftime('%Y%m%d'))
         except Exception as e:
             print("get cash_flow_df exception:", e.__cause__, e, code)
     return df

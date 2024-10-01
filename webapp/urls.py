@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views, performance_views, ir_views, account_views,indicator_views, balance_views,cashflow_views,cash_revenue_views,income_views,holding_views,zygc_views,industry_views
+from . import views, list_views, ir_views, account_views,indicator_views, balance_views,cashflow_views,cash_revenue_views,income_views,holding_views,zygc_views,industry_views
 from django.contrib.staticfiles.views import serve
 from .views import StockCreateView
 app_name = 'webapp'
@@ -13,7 +13,8 @@ urlpatterns = [
     path('<int:question_id>/vote/', views.vote, name='vote'),
     path('ir', ir_views.plot, name='ir'),
     path('account', account_views.plot, name='account'),
-    path('stock', performance_views.perf, name='stock'),
+    path('stock', list_views.score_boad, name='stock'),
+    path('stock/low_pb_pctl', list_views.low_pb_pctl, name='low_pb_pctl'),
     path('stock/<str:id>/<str:name>/add', StockCreateView.as_view, name='add'),
     path('stock/<str:code>/<str:name>/stock_indicator', indicator_views.indicator, name='stock_indicator'),
     path('stock/<str:code>/<str:name>/stock_indicator_plot', indicator_views.plot, name='stock_indicator_plot'),

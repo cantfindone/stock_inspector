@@ -13,27 +13,36 @@ def get(code):
     if df is None:
         try:
             df = ak.stock_cash_flow_sheet_by_quarterly_em(symbol=utils.prefix(code))
-            df = df[
-                ['SECURITY_CODE', 'REPORT_DATE', 'NETCASH_FINANCE', 'NETCASH_INVEST', 'NETCASH_OPERATE',
-                 'SALES_SERVICES']]
+            if 'SALES_SERVICES' in df.columns:
+                df = df[
+                    ['SECURITY_CODE', 'REPORT_DATE', 'NETCASH_FINANCE', 'NETCASH_INVEST', 'NETCASH_OPERATE',
+                     'SALES_SERVICES']]
+            else:
+                df = df[
+                    ['SECURITY_CODE', 'REPORT_DATE', 'NETCASH_FINANCE', 'NETCASH_INVEST', 'NETCASH_OPERATE']]
+                df['SALES_SERVICES'] = df['NETCASH_OPERATE'] * 0
             df.set_index("REPORT_DATE", inplace=True)
             df.index.name = None
             df = df.fillna(0)
             now = datetime.datetime.now()
-            days = (pd.to_datetime(df.index)[0] + datetime.timedelta(days=(90 if now.month < 12 else 180)) - now).days
+            report_date = pd.to_datetime(df.index)[0]
+            days = (report_date + datetime.timedelta(days=(120 if report_date.month != 9 else 180)) - now).days
             days = max(days, 5)
-            cache.set(key, df, expire=const.ONE_DAY * days, tag=code)
+            cache.set(key, df, expire=const.ONE_DAY * days, tag=report_date.strftime('%Y%m%d'))
+            print(key, 'expire at ', datetime.datetime.fromtimestamp(cache.get(key, expire_time=True)[1]),
+                  'tag=', report_date.strftime('%Y%m%d'))
         except Exception as e:
             print("get cash_flow_quarter exception:", e.__cause__, e, code)
     return df
 
 
-@cache.memoize(typed=True, expire=const.HALF_DAY)
+# @cache.memoize(typed=True, expire=const.HALF_DAY)
 def cash_revenue(code):
     cash = get(code).head(12)[['SALES_SERVICES']]
     income = income_quarter.get(code).head(12)[['OPERATE_INCOME']]
+    # print(f'cash.index:{cash.index}, income.index:{income.index}')
     cash_income = pd.merge(cash, income, left_index=True, right_index=True)
-    print(cash_income)
+    # print(cash_income)
     cash_income['cash_revenue'] = cash_income['SALES_SERVICES'] / cash_income['OPERATE_INCOME']
     return cash_income
 
@@ -67,11 +76,11 @@ def enrich(source_df):
 
 if __name__ == "__main__":
     # start = datetime.datetime.now()
-    # print(get("601117"))
+    # print(get("601377"))
     # end = datetime.datetime.now()
     # print(end - start)
     # df = ak.stock_cash_flow_sheet_by_yearly_em(symbol=utils.prefix('601117'))
     # df = ak.stock_cash_flow_sheet_by_quarterly_em(symbol=utils.prefix('601117'))
     # print(df['SALES_SERVICES'])
     # print(income_quarter.get('601117'))
-    print(cash_revenue('601117'))
+    print(cash_revenue('601377'))

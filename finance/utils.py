@@ -22,7 +22,7 @@ from pandas.core.dtypes.common import is_numeric_dtype
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = curPath[:curPath.find("stock_inspector\\") + len("stock_inspector\\")]  # stock_inspector，也就是项目的根路径
-cache = FanoutCache(directory=rootPath + "data")
+cache = FanoutCache(directory=rootPath + "data", size_limit=8 * 2 ** 30)
 
 
 # dataPath = os.path.abspath(rootPath + 'data\\')
@@ -60,7 +60,7 @@ def yesterday():
 
 @lru_cache()
 def trade_days():
-    for fn in os.listdir("../data"):
+    for fn in os.listdir(rootPath + "data"):
         if str(fn).startswith("trade_date_"):
             furthest_date_str = fn[11:]
             furthest_date = datetime.date.fromisoformat(furthest_date_str)
@@ -68,7 +68,7 @@ def trade_days():
                 with open(rootPath + "data" + os.path.sep + fn, 'rb') as file:
                     return pickle.load(file)
             else:
-                os.remove("data" + os.path.sep + fn)
+                os.remove(rootPath + "data" + os.path.sep + fn)
     tool_trade_date_hist_sina_df = ak.tool_trade_date_hist_sina()
     trade_dates = tool_trade_date_hist_sina_df['trade_date'].tolist()
     furthest_trade_date = trade_dates[-1]
@@ -227,10 +227,10 @@ def report_dates(num=2):
         dates.extend(list(map(lambda x: datetime.date(year, int(x[:2]), int(x[2:])), quarter_dates)))
     for d in range(len(dates)):
         dd = len(dates) - d - 1
-        if dates[dd] < _today and dates[dd].month != 12:
-            return dates[dd - 1:dd + 1]
+        if dates[dd] < _today + datetime.timedelta(days=-20):  # and dates[dd].month != 12:
+            return dates[dd - num + 1:dd + 1]
     return dates
 
 
 if __name__ == "__main__":
-    print(report_dates(2)[0].strftime("%Y%m%d"))
+    print(report_dates(2)[1].strftime("%Y%m%d"))

@@ -34,9 +34,12 @@ def get(code):
         df[df.columns[3:]] = df[df.columns[3:]].astype(float)
         df = df.fillna(0)
         now = datetime.datetime.now()
-        days = (pd.to_datetime(df['REPORT_DATE'])[0] +datetime.timedelta(days=(90 if now.month < 12 else 180)) - now).days
+        report_date = pd.to_datetime(df['REPORT_DATE'])[0]
+        days = (report_date + datetime.timedelta(days=(120 if report_date.month != 9 else 180)) - now).days
         days = max(days, 5)
-        cache.set(key, df, expire=const.ONE_DAY * days, tag=code)
+        cache.set(key, df, expire=const.ONE_DAY * days, tag=report_date.strftime('%Y%m%d'))
+        # print(key, 'expire at ', datetime.datetime.fromtimestamp(cache.get(key, expire_time=True)[1]),
+        #       tag=report_date.strftime('%Y%m%d'))
     return df
 
 
@@ -58,15 +61,17 @@ def is_good(code):
 
 # @cache.memoize(typed=True, expire=const.HALF_DAY)
 def do_enrich(code):
-    df = get(code)
-    has_contract_liab = True
-    if df is None:
-        print("no balance_sheet for stock:", code)
-        return 0, 0, 0, 0
-    if 'CONTRACT_LIAB' not in df.columns:
-        print("no CONTRACT_LIAB in balance_sheet", code)
-        has_contract_liab = False
+    df = None
     try:
+        df = get(code)
+        has_contract_liab = True
+        if df is None:
+            print("no balance_sheet for stock:", code)
+            return 0, 0, 0, 0
+        if 'CONTRACT_LIAB' not in df.columns:
+            print("no CONTRACT_LIAB in balance_sheet", code)
+            has_contract_liab = False
+
         contract_liab = False
         if has_contract_liab:
             df['CONTRACT_LIAB'] = df['CONTRACT_LIAB'].astype(float)
@@ -74,16 +79,18 @@ def do_enrich(code):
         goodwill = df['GOODWILL'][0]
         fixed_asset = df['FIXED_ASSET'][0]
         total_equity = df['TOTAL_EQUITY'][0]
+        al_ratio = df['TOTAL_LIABILITIES'][0] / df['TOTAL_LIAB_EQUITY'][0]
         operate_income_q = income.get_indicator(code, 'OPERATE_INCOME_Q')
         return 1 if contract_liab else 0, \
                0 if not has_contract_liab or operate_income_q == 0 else round(min(
                    df['CONTRACT_LIAB'][0] / operate_income_q, 1), 1) * 5, \
+               round(1 - al_ratio, 2), \
                round(1 - goodwill / total_equity, 2), \
                round(1 - fixed_asset / total_equity, 2)
 
     except Exception as e:
         print("is good exception in balance_sheet", e, code, df)
-        return 0, 0, 0, 0
+        return 0, 0, 0, 0, 0
 
 
 def enrich(source_df):
@@ -92,8 +99,10 @@ def enrich(source_df):
 
 if __name__ == "__main__":
     start = datetime.datetime.now()
-    df = get("000001")
-    print('GOODWILL' in df.columns)
+    print('do_enrich("000001"):', do_enrich("000001"))
+    # df = get("000001")
+    # print(df['TOTAL_LIAB_EQUITY'],df['TOTAL_LIABILITIES'])
+    # print('GOODWILL' in df.columns)
     end = datetime.datetime.now()
     print(end - start)
     # print(ak.stock_balance_sheet_by_report_em(symbol=utils.prefix('601688')).head(2).to_csv('balance_sheet.csv'))

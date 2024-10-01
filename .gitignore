@@ -1,2 +1,5 @@
 /data/
 /test/out/
+/finance/balance_sheet.csv
+/finance/income.csv
+/db.sqlite3

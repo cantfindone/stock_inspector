@@ -35,7 +35,7 @@ def zyyw(code):
     max_ = df[df['营业收入-占主营收入比'] == df['营业收入-占主营收入比'].max()]
     max_ = max_.reset_index()
     max_ = max_['分类']
-    print('max_:', max_)
+    # print('max_:', max_)
     return max_[0] if len(max_) > 0 else np.NAN
 
 
