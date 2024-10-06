@@ -9,7 +9,7 @@ def score_boad(request):
     df = sb.screen_stocks()
     html = df.to_html(escape=False)
     context = {'df': html}
-    df.to_csv(f'd:/stocks{datetime.date.today()}.csv')
+    df.to_csv(f'd:/tmp/stocks{datetime.date.today()}.csv')
     return render(request, 'webapp/stocks.html', context)
 
 

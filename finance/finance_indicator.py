@@ -71,8 +71,9 @@ def is_good(code):
 
 # @cache.memoize(typed=True, expire=const.HALF_DAY)
 def do_enrich(code):
-    try:
-        df = get(code)
+    # try:
+        print("code = ",code)
+        df = get(utils.prefix(code))
         df = df.replace('--', np.nan)
         df = df.fillna(0)
         df[df.columns[1:]] = df[df.columns[1:]].astype(float)
@@ -95,9 +96,9 @@ def do_enrich(code):
             1 - utils.cal_percentile(True, df['应收账款周转天数(天)']),
             2), accnt_t_days if accnt_t_days is not np.nan else 0, net_margin
 
-    except Exception as e:
-        print(f"finacie_indicator.do_enrich exception:{e},stock:{code}")
-        return 0, 0, 0, 0
+    # except Exception as e:
+    #     print(f"finacie_indicator.do_enrich exception:{e},stock:{code}")
+    #     return 0, 0, 0, 0
 
 
 def enrich(source_df):

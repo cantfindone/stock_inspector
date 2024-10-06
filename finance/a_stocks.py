@@ -63,7 +63,7 @@ if __name__ == "__main__":
     # df.reset_index(inplace=True)
     # del df['index']
     # print(df)
-    # df.to_csv("d:\\data.csv")
+    # df.to_csv("d:\\tmp\data.csv")
     df = get()
     # df= df[df['代码']=='601133']
     df.dropna(subset='60日涨跌幅', inplace=True)

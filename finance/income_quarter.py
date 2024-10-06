@@ -45,7 +45,7 @@ def get(code):
             print("except occurred in get income", e.__cause__, e)
             print("income_df:", df)
     # print(df.head(2))
-    # df.head(2).T.to_csv("d:\\income.csv")
+    # df.head(2).T.to_csv("d:\\tmp\income.csv")
     return df
 
 

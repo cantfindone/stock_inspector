@@ -6,7 +6,7 @@ from finance import utils
 def get(code):
     stock_profit_sheet_by_yearly_em = ak.stock_profit_sheet_by_yearly_em(symbol=utils.prefix(code))
     # print(stock_profit_sheet_by_yearly_em.head(2))
-    stock_profit_sheet_by_yearly_em.head(2).to_csv("d:\\income.csv")
+    stock_profit_sheet_by_yearly_em.head(2).to_csv("d:\\tmp\income.csv")
     sheet = stock_profit_sheet_by_yearly_em[
         ['SECURITY_CODE', 'REPORT_DATE', 'UPDATE_DATE', 'TOTAL_OPERATE_INCOME', 'TOTAL_OPERATE_INCOME_YOY', 'OPERATE_INCOME',
          'OPERATE_INCOME_YOY', 'TOTAL_OPERATE_COST', 'TOTAL_OPERATE_COST_YOY', 'OPERATE_COST', 'OPERATE_COST_YOY', 'RESEARCH_EXPENSE',

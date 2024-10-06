@@ -42,7 +42,7 @@ def get():
     #         lambda x: utils.clean_stock(x))
     # utils.dump_df(stock_yjbb_em_df, performance_file_path)
     stock_yjbb_em_df['股票代码'].map(lambda c: cache_manager.delete(c, report_date))
-    # stock_yjbb_em_df.to_csv("d:\\performance.csv")
+    # stock_yjbb_em_df.to_csv("d:\\tmp\performance.csv")
     # print(stock_yjbb_em_df)
 
     return stock_yjbb_em_df
